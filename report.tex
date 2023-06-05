@@ -1,0 +1,71 @@
+\documentclass[11pt,a4paper]{article}
+
+%page geometry
+\usepackage[margin=0.7in]{geometry}
+
+%encoding
+%--------------------------------------
+\usepackage[utf8]{inputenc} % input encoding
+\usepackage[T1]{fontenc} % output encoding
+%--------------------------------------
+
+%French-specific commands
+%--------------------------------------
+\usepackage{babel}
+\usepackage[autolanguage]{numprint}
+%--------------------------------------
+
+\usepackage{hyperref}
+
+\usepackage{booktabs}
+
+\usepackage{listings}
+\usepackage{color}
+
+\usepackage{graphicx}
+
+\usepackage{caption}
+\usepackage{subcaption}
+
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{algpseudocode}
+
+\usepackage[shortlabels]{enumitem}
+
+\newcommand{\cev}[1]{\reflectbox{\ensuremath{\vec{\reflectbox{\ensuremath{#1}}}}}}
+
+\begin{document}
+
+\title{Game Theory for Image Segmentation}
+\author{Clément JAMBON \\ \href{mailto:cjambon@student.ethz.ch}{cjambon@student.ethz.ch}}
+\maketitle
+
+\begin{abstract}
+    
+\end{abstract}
+
+\section{Introduction}
+
+\section{Clustering game}
+
+When evolutionary games involve a large number of possible strategies, it becomes hardly tractable to apply EGT as is and thus alternatives need to be considerated: Infection and Immunization Dynamics    
+
+Interesting because as discussed in "Clustering Games" Marcello Pelillo and Samuel Rota Bul`, allows to move away from the standard "partitioning approach" which has two major limitations: 1. each object is mapped to one class 2. and only one (no soft assignment). Other method exist towards this goal (e.g. soft k-means TODO citation, deterministic annealing with Gibbs distribution TODO: citation )
+
+With this framework, we do not need to know the number of clusters in advance.
+
+Clustering games are non-cooperative games. "instead of two rational players, we allow competition between a large population of non-rational agents" "Note that, since every object is by definition strongly similar to itself, setting the diagonal of the payoff matrix to zero, or in general to a sufficiently low value, is of fundamental importance"
+
+Section 3.10 for computational complexity
+
+\section{Infection and Immunization Dynamics (InImDyn)}
+Proceeds by injecting a strategy against which the current state is not immune through a selection strategy function. The main question is which selection strategy to adopt?
+
+\section{Discussion}
+
+Bulo introduced clustering games + would be interesting to extend them to higher-order similarities.
+
+\end{document} 
