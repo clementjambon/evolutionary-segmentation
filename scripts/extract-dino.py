@@ -1,7 +1,6 @@
 from transformers import ViTImageProcessor, ViTModel
 from PIL import Image
 from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
 import requests
 import os
 import numpy as np
