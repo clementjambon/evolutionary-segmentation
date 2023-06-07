@@ -43,13 +43,82 @@
 \author{Clément JAMBON \\ \href{mailto:cjambon@student.ethz.ch}{cjambon@student.ethz.ch}}
 \maketitle
 
-\begin{abstract}
+% \begin{abstract}
     
-\end{abstract}
+% \end{abstract}
 
 \section{Introduction}
 
+Image Segmentation has widely been explored in the Image Processing community. As a consequence, there exists a significant amount of methods including K-Means, graph-based methods\cite{graph-segmentation}, histogram clustering\cite{histogram-clustering} or more recently neural approaches that build on neural networks to extract priors from large amount data\cite{panoptic-segmentation} and allow to cluster pixels beyond color-space similarities.
+
+In this project, motivated by the material of "Controversies in Game Theory"\cite{course-gt}, we choose to focus on another approach that builds on Game Theory and Evolutionary Dynamics. More precisely, inspired by the work of Shen et al.~\cite{game-clustering} and the PhD dissertation of Samuel Rota Bulò\cite{bulo-thesis}, we propose to formulate image segmentation as a clustering game. In order to find the equilibrium of such a game, we lift it to a discrete-time evolutionary dynamics formulation where we make mixed strategies evolve in search for an \textit{Evolutionary Stable Strategy} (ESS). As images are very high-dimensional and lead to slow convergence when using standard algorithms like \textit{Best response dynamics} and \textit{Replicator dynamics}, we follow \cite{game-clustering} and \cite{bulo-thesis}, and use the \textit{Infection and immunization dynamics} with a pure strategy selection function as introduced by Bulò in \cite{inimdyn}.
+
+We start by reviewing the notion of clustering games with the material from the course\cite{course-gt} in section \ref{sec:cluster-game}. We then introduce discrete-time \textit{Evolutionary dynamics} and the algorithms we use to find such strategies in section \ref{sec:evo-dyn}. This allows us to define Image Segmentation as a clustering game and we present in section \ref{sec:seg-game} our assumptions and experimental setup. Finally, we present our results on both RGB similarities and higher-dimensional features from state-of-the-art deep learning models, namely DINO features\cite{dino}.
+
+Before getting any further, we would like to emphasize that all the results presented in this report were obtained from scratch. Both \cite{bulo-thesis} and \cite{game-clustering} provides a methodology for the described algorithms but we are not aware of any existing implementation. For reproducibility and educational purposes, we make all our code in the form of documented \textit{notebooks} available at \url{https://github.com/clementjambon/evolutionary-segmentation}. 
+
 \section{Clustering game}
+\label{sec:cluster-game}
+
+In the following, we introduce the notion of a clustering game and try to stay as close as possible to the notions introduced by Heinrich Nax and Jonny Newton in their lectures from course\cite{course-gt}. In every step, we try to connect the object introduced to the problem of segmentation.
+
+We start by introducing $S=\{1, \ldots, n\}$ a set of \textit{pure strategies} which represent objects to be clustered, in our case image pixels. We connect strategies with a payoff/utility matrix $A$ where $A_{i, j}$ specifies how much one can expect from choosing strategy $i$ against a strategy $j$. In the clustering case, we can interpret this matrix as a similarity matrix that quantifies how close pixel $i$ is similar to $j$. Note that in the following, we will assume only symmetric payoffs (which is consistent to our image-space clustering formulation). 
+
+In practice, we will consider linear combinations $\mathbf{x}$ of these pure strategies as \textit{mixed strategies} that, in order to be consistently comparable, will leave in the $n$-dimensional simplex:
+\begin{equation}
+    \Delta = \left\{\mathbf{x} = (x_1, \ldots, x_n) | \sum_{i=1}^n x_i = 1\right\}
+\end{equation}
+Each mixed strategy comes with a set of non-zero components $\sigma(\mathbf{x})$ which is called its \textit{support}. Intuitively, this will represent a set of pixels belonging to the same cluster. 
+
+With these definitions, we can now see that playing a pure strategy $i$ gives an expected pay-off $\pi(\mathbf{e}_i|\mathbf{x})=\mathbf{e}_i^TA\mathbf{x}$ where $\mathbf{e}_i$ is $i$th vectors of the canonical basis of $\mathbb{R}^n$. More generally, the expected payoff of a mixed strategy $\mathbf{y}$ against another $\mathbf{x}$ is given by $\pi(\mathbf{y}|\mathbf{x})=\mathbf{y}^TA\mathbf{x}$.
+
+As they will be necessary to understand some of the concepts introduced next and in section \ref{evo-dyn}, we also introduce the following notations:
+\begin{itemize}
+    \item the expected payoff of $\mathbf{x}$ against itself is $\pi(\mathbf{x})=\mathbf{x}^TA\mathbf{x}$
+    \item $\pi(\mathbf{y}-\mathbf{x}|\mathbf{x}) = \pi(\mathbf{y}|\mathbf{x}) - \pi(\mathbf{x})$
+    \item the \textit{best response} strategies $\beta(\mathbf{x})$ against $\mathbf{x}$ are the strategies that gives the maximum payoff when played against $\mathbf{x}$, namely $\beta(\mathbf{x})=\underset{\mathbf{z}}{\arg\max}\;\pi(\mathbf{y}|\mathbf{x})$. Note that these are not unique!
+\end{itemize}
+
+We can now intuitively define the notion of Nash equilibrium with these notations: $\mathbf{x}$ satisfies a \textit{Nash equilibrium} if no other strategies improve its expected payoff against $\mathbf{x}$ than itself or more formally and equivalently (with all the definitions we have):
+\begin{equation}
+    \forall \mathbf{y}\in\Delta,\quad  \pi(\mathbf{y}|\mathbf{x}) \leq \pi(\mathbf{x}) \iff \forall \mathbf{y}\in\Delta,\quad  \pi(\mathbf{y} - \mathbf{x}|\mathbf{x}) \leq 0 \iff \mathbf{x} \in \beta(\mathbf{x})
+\end{equation}
+
+Let's now come back to our clustering game. Intuitively, the goal will be, given a pixel similarity matrix $A$, to find a mixed strategy $\mathbf{x}$ that satisfies a Nash equilibrium and the support of such a strategy will give the pixels classified as part of the same cluster and the remaining pixels will be assigned to another cluster. You may ask now: what if we want to perform clustering with more than 2 clusters? We can simply slice-off the pixels belonging to the first cluster from $S$ and similarity matrix $A$ and find a new Nash equilibrium. In fact, this scheme provides a hint at the strength of clustering game. As emphasized by Bulò in \cite{bulo-thesis}, we need not know the relevant number of cluster in advance, which is a challenging task in Image Segmentation and clustering in general! Instead, we can just run this procedure recursively until $S$ is a singleton or we cannot find a Nash equilibrium (this latter point should not happen with a real symmetric matrix though!). Each of these iterations is called in both \cite{bulo-thesis} and \cite{game-clustering} a \textit{segment}. In practice, as we shall present in section \ref{sec:seg-game}, we define a maximum number of segments in our segmentation case.
+
+\section{Evolutionary dynamics}
+\label{sec:evo-dyn}
+
+With the \textit{clustering game} ready, we now need to find how to play the game! More formally, the challenge lies in \textbf{efficiently} finding an equilibrium. To this extent, we follow three approaches from \textit{Evolutionary Dynamics} covered by \cite{bulo-thesis} and \cite{clustering-game}. For conciseness and due to our lack of knowledge on the field, we will only cover the main definitions and give the intuitions behind the corresponding algorithms.
+
+\textit{Evolutionary Dynamics} provides a framework to model the evolution of populations, or in other words mixed strategies, as a function of time. In other words, given an initial mixed strategy $\mathbf{x}^{(0)}$, its evolution  is described as a general differential equation: 
+\begin{equation}
+    \dot{\mathbf{x}}^{(t)} = g(\mathbf{x}^{(t)}, t)
+\end{equation}
+
+In practice, under some assumptions (notably proper renormalization of $\mathbf{x}^{(t)}$), we can discretize this continuous process using discrete time steps $t=1, 2, \ldots$ and express the population $\mathbf{x}^{(t+1)}$ at time $t+1$ as a function of population $\mathbf{x}^{(t)}$ at time $t$.
+
+\subsection*{Best response dynamics}
+\textit{Best response dynamics} builds on the intuition that we can inject in the population, at each time step $t$, one individual that would yield the best response w.r.t. the payoff matrix. This gives the following discrete-time dynamics:
+\begin{equation}
+    \mathbf{x}^{(t+1)} = \frac{ \mathbf{r}^{(t+1)} -  \mathbf{x}^{(t)}}{t + 1} + \mathbf{x}^{(t)} \quad \text{where } \mathbf{r}^{(t+1)}\in\beta(\mathbf{x}^{(t)})
+\end{equation}
+As the population "grows", the newly added individuals should have less and less of an impact: this is captured by the term $\frac{1}{t}$ in the equation above.
+
+\subsection*{Replicator dynamics}
+\textit{Replicator dynamics} are a subset of more general \textit{imitation dynamics}. The key idea is to rescale each entry $i$ of the mixed strategy vector $\mathbf{x}$ depending on how well playing pure strategy $i$ against itself (namely $\mathbf{x}$) performs:
+\begin{equation}
+    x_i^{(t+1)} = x_i^{(t)}\frac{\pi(\mathbf{e}_i|\mathbf{x}) + C}{\pi(\mathbf{x}) + C}
+\end{equation}
+The constant $C$ is simply introduced to ensure that we do not divide by zero. In our case, as we shall present in section \ref{sec:seg-game}, the similarity matrix has only stricly positive entries and we can just choose $C$ to be zero.
+
+\subsection*{Infection and immunization dynamics}
+As \textit{Best response dynamics} and \textit{Replicator dynamics} tend to be particularly slow at approaching an equilibrium (especially when the set of strategies becomes large which will be a concern to us considering the large number of pixels in an image). See section 3.10 \cite{bulo-thesis} for a quantitative discussion of this latter point. To address this, Bulò and Bomze introduced in \cite{inimdyn} \textit{Infection and immunization dynamics}.
+
+\section{Playing the segmentation game}
+\label{sec:seg-game}
+
+In all cases, we initialize the population with $\mathbf{x}^{(0)}$ a constant value (i.e. $\frac{1}{n}$). In other words, all pixels start with an equal probability of belonging to the cluster.
 
 When evolutionary games involve a large number of possible strategies, it becomes hardly tractable to apply EGT as is and thus alternatives need to be considerated: Infection and Immunization Dynamics    
 
@@ -61,13 +130,15 @@ Clustering games are non-cooperative games. "instead of two rational players, we
 
 Section 3.10 for computational complexity
 
-\section{Infection and Immunization Dynamics (InImDyn)}
 Proceeds by injecting a strategy against which the current state is not immune through a selection strategy function. The main question is which selection strategy to adopt?
 
 \section{Discussion}
 
-Bulo introduced clustering games + would be interesting to extend them to higher-order similarities.
+Bulo introduced clustering games + would be interesting to extend them to higher-order similarities and that is actually what he does in his thesis.
 
 Cite "Deep ViT Features as Dense Visual Descriptors"
+
+\bibliographystyle{plain}
+\bibliography{biblio}
 
 \end{document} 
