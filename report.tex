@@ -31,7 +31,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 
-\usepackage{algpseudocode}
+\usepackage[parfill, indent]{parskip}
 
 \usepackage[shortlabels]{enumitem}
 
@@ -43,9 +43,7 @@
 \author{Clément JAMBON \\ \href{mailto:cjambon@student.ethz.ch}{cjambon@student.ethz.ch}}
 \maketitle
 
-% \begin{abstract}
-    
-% \end{abstract}
+TODO: add cool teaser!
 
 \section{Introduction}
 
@@ -66,7 +64,7 @@ We start by introducing $S=\{1, \ldots, n\}$ a set of \textit{pure strategies} w
 
 In practice, we will consider linear combinations $\mathbf{x}$ of these pure strategies as \textit{mixed strategies} that, in order to be consistently comparable, will leave in the $n$-dimensional simplex:
 \begin{equation}
-    \Delta = \left\{\mathbf{x} = (x_1, \ldots, x_n) | \sum_{i=1}^n x_i = 1\right\}
+    \Delta = \left\{\mathbf{x} = (x_1, \ldots, x_n)\; |\; \sum_{i=1}^n x_i = 1\right\}
 \end{equation}
 Each mixed strategy comes with a set of non-zero components $\sigma(\mathbf{x})$ which is called its \textit{support}. Intuitively, this will represent a set of pixels belonging to the same cluster. 
 
@@ -89,7 +87,7 @@ Let's now come back to our clustering game. Intuitively, the goal will be, given
 \section{Evolutionary dynamics}
 \label{sec:evo-dyn}
 
-With the \textit{clustering game} ready, we now need to find how to play the game! More formally, the challenge lies in \textbf{efficiently} finding an equilibrium. To this extent, we follow three approaches from \textit{Evolutionary Dynamics} covered by \cite{bulo-thesis} and \cite{clustering-game}. For conciseness and due to our lack of knowledge on the field, we will only cover the main definitions and give the intuitions behind the corresponding algorithms.
+With the \textit{clustering game} ready, we now need to find how to play the game! More formally, the challenge lies in \textbf{efficiently} finding an equilibrium. To this extent, we follow three approaches from \textit{Evolutionary Dynamics} covered by \cite{bulo-thesis} and \cite{game-clustering}. For conciseness and due to our lack of knowledge on the field, we will only cover the main definitions and give the intuitions behind the corresponding algorithms.
 
 \textit{Evolutionary Dynamics} provides a framework to model the evolution of populations, or in other words mixed strategies, as a function of time. In other words, given an initial mixed strategy $\mathbf{x}^{(0)}$, its evolution  is described as a general differential equation: 
 \begin{equation}
@@ -101,38 +99,63 @@ In practice, under some assumptions (notably proper renormalization of $\mathbf{
 \subsection*{Best response dynamics}
 \textit{Best response dynamics} builds on the intuition that we can inject in the population, at each time step $t$, one individual that would yield the best response w.r.t. the payoff matrix. This gives the following discrete-time dynamics:
 \begin{equation}
+    \label{eq:best-response}
     \mathbf{x}^{(t+1)} = \frac{ \mathbf{r}^{(t+1)} -  \mathbf{x}^{(t)}}{t + 1} + \mathbf{x}^{(t)} \quad \text{where } \mathbf{r}^{(t+1)}\in\beta(\mathbf{x}^{(t)})
 \end{equation}
 As the population "grows", the newly added individuals should have less and less of an impact: this is captured by the term $\frac{1}{t}$ in the equation above.
 
 \subsection*{Replicator dynamics}
-\textit{Replicator dynamics} are a subset of more general \textit{imitation dynamics}. The key idea is to rescale each entry $i$ of the mixed strategy vector $\mathbf{x}$ depending on how well playing pure strategy $i$ against itself (namely $\mathbf{x}$) performs:
+\textit{Replicator dynamics} are a subset of more general \textit{imitation dynamics}. The key idea is to rescale each entry $i$ of the mixed strategy vector $\mathbf{x}^{(t)}$ at time $t$ depending on how well playing pure strategy $i$ against itself (namely $\mathbf{x}$) performs:
 \begin{equation}
-    x_i^{(t+1)} = x_i^{(t)}\frac{\pi(\mathbf{e}_i|\mathbf{x}) + C}{\pi(\mathbf{x}) + C}
+    \label{eq:replicator-dynamics}
+    x_i^{(t+1)} = x_i^{(t)}\frac{\pi(\mathbf{e}_i|\mathbf{x}^{(t)}) + C}{\pi(\mathbf{x}^{(t)}) + C}
 \end{equation}
 The constant $C$ is simply introduced to ensure that we do not divide by zero. In our case, as we shall present in section \ref{sec:seg-game}, the similarity matrix has only stricly positive entries and we can just choose $C$ to be zero.
 
 \subsection*{Infection and immunization dynamics}
-As \textit{Best response dynamics} and \textit{Replicator dynamics} tend to be particularly slow at approaching an equilibrium (especially when the set of strategies becomes large which will be a concern to us considering the large number of pixels in an image). See section 3.10 \cite{bulo-thesis} for a quantitative discussion of this latter point. To address this, Bulò and Bomze introduced in \cite{inimdyn} \textit{Infection and immunization dynamics}.
+Unfortunately, \textit{Best response dynamics} and \textit{Replicator dynamics} tend to be particularly slow at approaching an equilibrium (especially when the set of strategies $S$ becomes large which will be a concern to us considering the large number of pixels in an image). See section 3.10 of \cite{bulo-thesis} for a quantitative discussion of this latter point. To address this, Bulò and Bomze introduced in \cite{inimdyn} \textit{Infection and immunization dynamics} (which we further denote as InImDyn for brevity).   
+
+The key takeaway of this more advanced mechanism is, starting from $\mathbf{x}$, to progressively infect the population with another population against which it is not immune. This entails to define the notion of infection and we can naturaly assume that a population $\mathbf{y}$ is \textit{infective} for another population $\mathbf{y}$ if it stricly improves its payoff, namely $\pi(\mathbf{y}|\mathbf{x})>\pi(\mathbf{x})\iff\pi(\mathbf{y}-\mathbf{x}|\mathbf{x})>0$. Following \cite{bulo-thesis}, we denote the corresponding set of infective strategies as $\Upsilon(\mathbf{x})=\{\mathbf{y}\in\Delta\; |\; \pi(\mathbf{y}-\mathbf{x}|\mathbf{x})>0\}$.
+
+However, to actually put into practice such a strategy, two points need to be clarified:
+\begin{itemize}
+    \item The first is: "which strategy should infect population $\mathbf{x}$?" More formally, we need to define an infective \textit{strategy selection function} $\mathcal{S}(\mathbf{x})$. In \cite{inimdyn}, propose a rather simple idea: find a pure strategy $\mathbf{e}_i$ that maximizes $\pi(\mathbf{e}_i-\mathbf{x}|\mathbf{x})$. Actually, this can be extended further to maximizing $|\pi(\mathbf{e}_i-\mathbf{x}|\mathbf{x})|$ and in the case where this maximum corresponds to a negative value of $\pi(\mathbf{e}_i-\mathbf{x}|\mathbf{x})$ (only allowed when $i$ is in the support of $\mathbf{x}$ to be able to define the \textit{costrategy} thereafter), we can choose what is called the \textit{costrategy} $\bar{\mathbf{e}}_i^\mathbf{x}$ of $\mathbf{e}_i$ w.r.t $\mathbf{x}$ that is obtained by projecting $\mathbf{e}_i$ on the opposite side of the simplex $\Delta$ while passing through $\mathbf{x}$. This can be written analytically as $\bar{\mathbf{e}}_i^\mathbf{x}=-\frac{1}{x_i-1}\mathbf{e}_i+\frac{x_i}{x_i-1}\mathbf{x}$.
+    \item The second point is "how much of this selected population $\mathbf{y}=\mathcal{S}(\mathbf{x}^{(t)})$ we should inject within the existing population $\mathbf{x}^{(t)}$ at time $t$. This can be thought of as choosing a nice scalar $\delta_\mathbf{y}(\mathbf{x})$ (similar to $\frac{1}{t+1}$ in eq.~\ref{eq:best-response} describing best response dynamics) such that we can write the discrete update as:
+    \begin{equation}
+        \label{eq:inimdyn}
+        \mathbf{x}^{(t+1)} = \delta_\mathbf{y}(\mathbf{x}) (\mathbf{y} - \mathbf{x}^{(t)}) + \mathbf{x}^{(t)}
+    \end{equation}
+    By building on the properties of the simplex (we omit the introduction of the notions \textit{score function} and \textit{invasion barriers} to keep the discussion simple) and in the case of our clustering game scenario introduced in section \ref{sec:cluster-game}, one can derive that we can choose (see \cite{bulo-thesis}):
+    \begin{equation}
+        \delta_\mathbf{y}(\mathbf{x}) = \begin{cases}
+            \min\left(\frac{\pi(\mathbf{x}-\mathbf{y}|\mathbf{x})}{\pi(\mathbf{y}-\mathbf{x})}, 1\right) & \text{ if $\pi(\mathbf{y}-\mathbf{x}) < 0$} \\
+            1 & \text{ otherwise}
+        \end{cases}
+    \end{equation}
+\end{itemize}
+
+We know mention two results from \cite{bulo-thesis} that hints at the convergence of InImDyn under the pure selection strategy: 
+\begin{itemize}
+    \item First, Proposition 4 of section 3 of \cite{bulo-thesis} ensures that there exists an infective strategy for a mixed strategy $\textbf{x}$ if and only if the strategy given by the pure strategy selection scheme described above is injective. 
+    \item Second, Theorem 2 of section 3 of \cite{bulo-thesis} guarantees that if the set of infective strategies $\Upsilon(\mathbf{x})$ for a population $\mathbf{x}$ is empty, then $\mathbf{x}$ is a fixed point of the InImDyn dynamics and more interestingly a Nash equilibrium.
+\end{itemize}
 
 \section{Playing the segmentation game}
 \label{sec:seg-game}
 
-In all cases, we initialize the population with $\mathbf{x}^{(0)}$ a constant value (i.e. $\frac{1}{n}$). In other words, all pixels start with an equal probability of belonging to the cluster.
+With all this nice formalism at our disposal, we now expose how we can use it to practically perform image segmentation. Additionally,we clarify our experimental setup. 
 
-When evolutionary games involve a large number of possible strategies, it becomes hardly tractable to apply EGT as is and thus alternatives need to be considerated: Infection and Immunization Dynamics    
+First of all, we need to define the actual payoff matrix $A$. Similar to \cite{bulo-thesis} and \cite{game-clustering}, we choose to compute similarities using a Gaussian Kernel:
+\begin{equation}
+    A_{i, j}=\exp\left(-\frac{\lVert C(i) - C(j)\rVert^2}{\sigma^2}\right)
+\end{equation}
+where $C(i)$ corresponds to a 3-dimensional vector representing the value of pixel $i$ in the chosen color space. As suggested in \cite{bulo-thesis}, we convert initial values in \textit{RGB} space to the \textit{Lab} color space using the implementation provided by the OpenCV library\cite{opencv_library}. We choose $\sigma$ to match the dynamic range of standard images, namely $\sigma=250$.
 
-Interesting because as discussed in "Clustering Games" Marcello Pelillo and Samuel Rota Bul`, allows to move away from the standard "partitioning approach" which has two major limitations: 1. each object is mapped to one class 2. and only one (no soft assignment). Other method exist towards this goal (e.g. soft k-means TODO citation, deterministic annealing with Gibbs distribution TODO: citation )
+As computations scale quadratically with the side-length of images (because we have $n=H\times W$ pixels), we follow again \cite{bulo-thesis} and subsample pixels at different rates (see next section), run our clustering and then assign out-of-sample pixels using the dominant-set technique from \cite{dominant-set}. In all cases, we initialize the population with $\mathbf{x}^{(0)}$ a constant value (i.e. $\frac{1}{n}$). In other words, all pixels start with an equal probability of belonging to the cluster. We run clustering on at most 10 segments, which yields at most 11 clusters.
 
-With this framework, we do not need to know the number of clusters in advance.
+Finally, as we try to reproduce the results of \cite{bulo-thesis} and \cite{game-clustering}, we evaluate our algorithms on the BSDS300 dataset\cite{bsds300}.
 
-Clustering games are non-cooperative games. "instead of two rational players, we allow competition between a large population of non-rational agents" "Note that, since every object is by definition strongly similar to itself, setting the diagonal of the payoff matrix to zero, or in general to a sufficiently low value, is of fundamental importance"
-
-Section 3.10 for computational complexity
-
-Proceeds by injecting a strategy against which the current state is not immune through a selection strategy function. The main question is which selection strategy to adopt?
-
-\section{Discussion}
+\section{Conclusion and discussion}
 
 Bulo introduced clustering games + would be interesting to extend them to higher-order similarities and that is actually what he does in his thesis.
 
