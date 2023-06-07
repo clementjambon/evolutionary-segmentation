@@ -8,6 +8,12 @@ Before getting started, please make sure you have the necessary dependencies wit
 pip install -r requirements_dino.txt`
 ```
 
+Then download the BSDS300 datasets (if not already done). To do so, we provide a script which you can execute with
+```bash
+cd scripts
+./download_bsds.sh
+```
+
 You can then run the base notebook in `notebooks/gt_segmentation.ipynb`.
 
 ## Extracting DINO features
