@@ -27,6 +27,8 @@
 \usepackage{caption}
 \usepackage{subcaption}
 
+\usepackage{float}
+
 
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -43,13 +45,34 @@
 \author{Clément JAMBON \\ \href{mailto:cjambon@student.ethz.ch}{cjambon@student.ethz.ch}}
 \maketitle
 
-TODO: add cool teaser!
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/teaser/hike.jpg}
+        \caption{ }
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/teaser/hike_seg.png}
+        \caption{ }
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/teaser/hike_avg.png}
+        \caption{ }
+    \end{subfigure}
+       \caption{Segmentation obtained with our implementation of \textit{Pure Infection and immunization dynamics}: (a) is the original image, (b) shows the resulting clusters and (c) the average colors over the segments.}
+       \label{fig:teaser}
+\end{figure}
 
 \section{Introduction}
 
 Image Segmentation has widely been explored in the Image Processing community. As a consequence, there exists a significant amount of methods including K-Means, graph-based methods\cite{graph-segmentation}, histogram clustering\cite{histogram-clustering} or more recently neural approaches that build on neural networks to extract priors from large amount data\cite{panoptic-segmentation} and allow to cluster pixels beyond color-space similarities.
 
-In this project, motivated by the material of "Controversies in Game Theory"\cite{course-gt}, we choose to focus on another approach that builds on Game Theory and Evolutionary Dynamics. More precisely, inspired by the work of Shen et al.~\cite{game-clustering} and the PhD dissertation of Samuel Rota Bulò\cite{bulo-thesis}, we propose to formulate image segmentation as a clustering game. In order to find the equilibrium of such a game, we lift it to a discrete-time evolutionary dynamics formulation where we make mixed strategies evolve in search for an \textit{Evolutionary Stable Strategy} (ESS). As images are very high-dimensional and lead to slow convergence when using standard algorithms like \textit{Best response dynamics} and \textit{Replicator dynamics}, we follow \cite{game-clustering} and \cite{bulo-thesis}, and use the \textit{Infection and immunization dynamics} with a pure strategy selection function as introduced by Bulò in \cite{inimdyn}.
+In this project, motivated by the material of "Controversies in Game Theory"\cite{course-gt}, we choose to focus on another approach that builds on Game Theory and Evolutionary Dynamics. More precisely, inspired by the work of Shen et al.~\cite{game-clustering} and the PhD dissertation of Samuel Rota Bulò\cite{bulo-thesis}, we propose to formulate image segmentation as a clustering game. In order to find the equilibrium of such a game, we lift it to a discrete-time evolutionary dynamics formulation where we make mixed strategies evolve in search for an \textit{Evolutionary Stable Strategy} (ESS). As images are very high-dimensional and lead to slow convergence when using standard algorithms like \textit{Best response dynamics} and \textit{Replicator dynamics}, we follow \cite{game-clustering} and \cite{bulo-thesis}, and use the \textit{Infection and immunization dynamics} with a pure strategy selection function as introduced by Bulò in \cite{inimdyn}. Fig.~\ref{fig:teaser} provides a teaser of our implementation.
 
 We start by reviewing the notion of clustering games with the material from the course\cite{course-gt} in section \ref{sec:cluster-game}. We then introduce discrete-time \textit{Evolutionary dynamics} and the algorithms we use to find such strategies in section \ref{sec:evo-dyn}. This allows us to define Image Segmentation as a clustering game and we present in section \ref{sec:seg-game} our assumptions and experimental setup. Finally, we present our results on both RGB similarities and higher-dimensional features from state-of-the-art deep learning models, namely DINO features\cite{dino}.
 
@@ -70,7 +93,7 @@ Each mixed strategy comes with a set of non-zero components $\sigma(\mathbf{x})$
 
 With these definitions, we can now see that playing a pure strategy $i$ gives an expected pay-off $\pi(\mathbf{e}_i|\mathbf{x})=\mathbf{e}_i^TA\mathbf{x}$ where $\mathbf{e}_i$ is $i$th vectors of the canonical basis of $\mathbb{R}^n$. More generally, the expected payoff of a mixed strategy $\mathbf{y}$ against another $\mathbf{x}$ is given by $\pi(\mathbf{y}|\mathbf{x})=\mathbf{y}^TA\mathbf{x}$.
 
-As they will be necessary to understand some of the concepts introduced next and in section \ref{evo-dyn}, we also introduce the following notations:
+As they will be necessary to understand some of the concepts introduced next and in section \ref{sec:evo-dyn}, we also introduce the following notations:
 \begin{itemize}
     \item the expected payoff of $\mathbf{x}$ against itself is $\pi(\mathbf{x})=\mathbf{x}^TA\mathbf{x}$
     \item $\pi(\mathbf{y}-\mathbf{x}|\mathbf{x}) = \pi(\mathbf{y}|\mathbf{x}) - \pi(\mathbf{x})$
@@ -151,15 +174,113 @@ First of all, we need to define the actual payoff matrix $A$. Similar to \cite{b
 \end{equation}
 where $C(i)$ corresponds to a 3-dimensional vector representing the value of pixel $i$ in the chosen color space. As suggested in \cite{bulo-thesis}, we convert initial values in \textit{RGB} space to the \textit{Lab} color space using the implementation provided by the OpenCV library\cite{opencv_library}. We choose $\sigma$ to match the dynamic range of standard images, namely $\sigma=250$.
 
-As computations scale quadratically with the side-length of images (because we have $n=H\times W$ pixels), we follow again \cite{bulo-thesis} and subsample pixels at different rates (see next section), run our clustering and then assign out-of-sample pixels using the dominant-set technique from \cite{dominant-set}. In all cases, we initialize the population with $\mathbf{x}^{(0)}$ a constant value (i.e. $\frac{1}{n}$). In other words, all pixels start with an equal probability of belonging to the cluster. We run clustering on at most 10 segments, which yields at most 11 clusters.
+As computations scale quadratically with the side-length of images (because we have $n=H\times W$ pixels), we follow again \cite{bulo-thesis} and subsample pixels at different rates (see next section), run our clustering and then assign out-of-sample pixels using the dominant-set technique from \cite{dominant-set}. In all cases, we initialize the population with $\mathbf{x}^{(0)}$ a constant value (i.e. $\frac{1}{n}$). In other words, all pixels start with an equal probability of belonging to the cluster. We run clustering on at most 8 segments, which yields at most 9 clusters (because we need to account for the potentially non-classified samples at the end of the last segment). For all experiments, we set the maximum number of iterations in a segment to 5000 and stop the dynamics if we a strategy reaches an \textit{$\varepsilon$-neighborhood} of a Nash equilibrium defined in \cite{bulo-thesis} as
+\begin{equation}
+    \sum_{i=1}^n\left[\min(x_i, \pi(\mathbf{x}-\mathbf{e}_i|\mathbf{x}))\right]^2\leq \varepsilon^2
+\end{equation}
+and we choose $\varepsilon=10^{-3}$.
 
 Finally, as we try to reproduce the results of \cite{bulo-thesis} and \cite{game-clustering}, we evaluate our algorithms on the BSDS300 dataset\cite{bsds300}.
 
+\section{Results}
+\label{sec:results}
+
+All the results provided thereafter can be reproduced by using the notebook provided with this report.
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/methods/fp/14037_avg.png}
+        \includegraphics[width=\textwidth]{figures/methods/fp/260058_avg.png}
+        \includegraphics[width=\textwidth]{figures/methods/fp/361010_avg.png}
+        \caption{Best Response dynamics}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/methods/rd/14037_avg.png}
+        \includegraphics[width=\textwidth]{figures/methods/rd/260058_avg.png}
+        \includegraphics[width=\textwidth]{figures/methods/rd/361010_avg.png}
+        \caption{Replicator dynamics}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/methods/inimdyn/14037_avg.png}
+        \includegraphics[width=\textwidth]{figures/methods/inimdyn/260058_avg.png}
+        \includegraphics[width=\textwidth]{figures/methods/inimdyn/361010_avg.png}
+        \caption{Pure InImDyn}
+    \end{subfigure}
+       \caption{Segmentations obtained with our implementations of the three dynamics presented in section \ref{sec:evo-dyn} at sampling rate $p=0.01$.}
+       \label{fig:results-dynamics}
+\end{figure}
+
+In Fig.~\ref{fig:results-dynamics} we compare the three different dynamics on three images from the test set of the BSDS300 dataset. We can clearly see that with a fixed maximum number of iterations, Pure InImDyn clearly outperforms Best Response dynamics. The difference is not so clear for Replicator dynamics. However, as we shall see below, it is significantly more efficiently than the later!
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.24\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/sampling_rate/0.001/219090_avg.png}
+        \includegraphics[width=\textwidth]{figures/sampling_rate/0.001/253055_avg.png}
+        \includegraphics[width=\textwidth]{figures/sampling_rate/0.001/295087_avg.png}
+        \caption{$p=0.001$}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.24\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/sampling_rate/0.0025/219090_avg.png}
+        \includegraphics[width=\textwidth]{figures/sampling_rate/0.0025/253055_avg.png}
+        \includegraphics[width=\textwidth]{figures/sampling_rate/0.0025/295087_avg.png}
+        \caption{$p=0.0025$}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.24\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/sampling_rate/0.005/219090_avg.png}
+        \includegraphics[width=\textwidth]{figures/sampling_rate/0.005/253055_avg.png}
+        \includegraphics[width=\textwidth]{figures/sampling_rate/0.005/295087_avg.png}
+        \caption{$p=0.005$}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.24\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/sampling_rate/0.01/219090_avg.png}
+        \includegraphics[width=\textwidth]{figures/sampling_rate/0.01/253055_avg.png}
+        \includegraphics[width=\textwidth]{figures/sampling_rate/0.01/295087_avg.png}
+        \caption{$p=0.01$}
+    \end{subfigure}
+       \caption{Segmentations obtained with different sampling rates.}
+       \label{fig:sampling-rate}
+\end{figure}
+
+Next, we investigate the impact of the sampling rate $p$. For this, we focus on the InImDyn dynamics. As shown in Fig.~\ref{fig:sampling-rate} and unsurprisingly, higher sampling rates gives perceptually more consistent clusters. However, higher sampling rates require more iterations to converge. This explains the slight decrease in quality between $p=0.005$ and $p=0.01$ in Fig.~\ref{fig:sampling-rate}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\textwidth]{figures/execution_time.pdf}
+    \caption{Average execution time on the test set of the BSDS300 dataset with different sampling rates and across the multiple dynamics}
+    \label{fig:execution-time}
+\end{figure}
+
+Furthermore, to motivate the advantage of Pure InImDyn over Best Response and Replicator dynamics, we execute our three dynamics on the test set of the BSDS300 dataset and record the execution time. Fig.~\ref{fig:execution-time} shows the significant gain that InImDyn provides us with.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/trajectories/102061.png}
+    \includegraphics[width=0.8\textwidth]{figures/trajectories/196073.png}
+    \caption{Trajectories of the mixed strategy entries on the first segment of two images from the BSDS300 dataset}
+    \label{fig:trajectories}
+\end{figure}
+
+Finally, we show in Fig.~\ref{fig:trajectories} examples of the distribution of strategies as they evolve following the discrete-time dynamics of each of the investigate approaches. These results are consistent with the one presented in \cite{game-clustering}. We can see in the right column that Pure InImDyn reaches an equilibrium faster than the other dynamics.
+
+
 \section{Conclusion and discussion}
 
-Bulo introduced clustering games + would be interesting to extend them to higher-order similarities and that is actually what he does in his thesis.
+In this project, we investigated a game theoretic approach to Image Segmentation. To do so, we built on the previous works \cite{bulo-thesis} and \cite{game-clustering}, and proposed to study three different evolutionary dynamics: \textit{Best Response dynamics}, \textit{Replicator dynamics} and \textit{Infection and immunization dynamics} with a pure selection strategy. Consistently with their results, we showed that InImDyn provides a good tradeoff between efficiency and quality (in terms of equilibrium).
 
-Cite "Deep ViT Features as Dense Visual Descriptors"
+Our clustering game is very simple and only rely on pairwise similarities between pixels without taking into account spatiality or any form of aggregated payoff. As a consequence, it would be interesting to study higher-order similarities as introduced later in Bulò's PhD dissertation\cite{bulo-thesis}.
 
 \bibliographystyle{plain}
 \bibliography{biblio}
