@@ -1,6 +1,8 @@
 # Game Theory for Image Segmentation
 *Clément JAMBON* 
 
+This is the implementation of a small project I did for the block course ["Controversies in Game Theory IX: Cooperative and Non-​Cooperative Game Theory"](https://coss.ethz.ch/education/controversies.html).
+
 ## Experimenting with the main notebook
 
 Before getting started, please make sure you have the necessary dependencies with
@@ -15,6 +17,8 @@ cd scripts
 ```
 
 You can then run the base notebook in `notebooks/gt_segmentation.ipynb`.
+
+If you want to reproduce the results with the DINO features, you will need to extract them as described in the next paragraph and then use the dedicated notebook in `notebooks/dino_segmentation.ipynb`.
 
 ## Extracting DINO features
 

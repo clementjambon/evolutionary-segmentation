@@ -74,7 +74,7 @@ Image Segmentation has widely been explored in the Image Processing community. A
 
 In this project, motivated by the material of "Controversies in Game Theory"\cite{course-gt}, we choose to focus on another approach that builds on Game Theory and Evolutionary Dynamics. More precisely, inspired by the work of Shen et al.~\cite{game-clustering} and the PhD dissertation of Samuel Rota Bulò\cite{bulo-thesis}, we propose to formulate image segmentation as a clustering game. In order to find the equilibrium of such a game, we lift it to a discrete-time evolutionary dynamics formulation where we make mixed strategies evolve in search for an \textit{Evolutionary Stable Strategy} (ESS). As images are very high-dimensional and lead to slow convergence when using standard algorithms like \textit{Best response dynamics} and \textit{Replicator dynamics}, we follow \cite{game-clustering} and \cite{bulo-thesis}, and use the \textit{Infection and immunization dynamics} with a pure strategy selection function as introduced by Bulò in \cite{inimdyn}. Fig.~\ref{fig:teaser} provides a teaser of our implementation.
 
-We start by reviewing the notion of clustering games with the material from the course\cite{course-gt} in section \ref{sec:cluster-game}. We then introduce discrete-time \textit{Evolutionary dynamics} and the algorithms we use to find such strategies in section \ref{sec:evo-dyn}. This allows us to define Image Segmentation as a clustering game and we present in section \ref{sec:seg-game} our assumptions and experimental setup. Finally, we present our results on both RGB similarities and higher-dimensional features from state-of-the-art deep learning models, namely DINO features\cite{dino}.
+We start by reviewing the notion of clustering games with the material from the course\cite{course-gt} in section \ref{sec:cluster-game}. We then introduce discrete-time \textit{Evolutionary dynamics} and the algorithms we use to find such strategies in section \ref{sec:evo-dyn}. This allows us to define Image Segmentation as a clustering game and we present in section \ref{sec:seg-game} our assumptions and experimental setup. Finally, we present our results on both RGB similarities \ref{sec:results} and propose to extend the method to higher-dimensional features from state-of-the-art deep learning models, namely DINO features\cite{dino}, in section \ref{sec:dino}.
 
 Before getting any further, we would like to emphasize that all the results presented in this report were obtained from scratch. Both \cite{bulo-thesis} and \cite{game-clustering} provides a methodology for the described algorithms but we are not aware of any existing implementation. For reproducibility and educational purposes, we make all our code in the form of documented \textit{notebooks} available at \url{https://github.com/clementjambon/evolutionary-segmentation}. 
 
@@ -250,7 +250,7 @@ In Fig.~\ref{fig:results-dynamics} we compare the three different dynamics on th
         \includegraphics[width=\textwidth]{figures/sampling_rate/0.01/295087_avg.png}
         \caption{$p=0.01$}
     \end{subfigure}
-       \caption{Segmentations obtained with different sampling rates.}
+       \caption{Segmentations obtained at different sampling rates.}
        \label{fig:sampling-rate}
 \end{figure}
 
@@ -259,7 +259,7 @@ Next, we investigate the impact of the sampling rate $p$. For this, we focus on 
 \begin{figure}
     \centering
     \includegraphics[width=0.7\textwidth]{figures/execution_time.pdf}
-    \caption{Average execution time on the test set of the BSDS300 dataset with different sampling rates and across the multiple dynamics}
+    \caption{Average execution time on the test set of the BSDS300 dataset at different sampling rates and across the multiple dynamics}
     \label{fig:execution-time}
 \end{figure}
 
@@ -275,6 +275,74 @@ Furthermore, to motivate the advantage of Pure InImDyn over Best Response and Re
 
 Finally, we show in Fig.~\ref{fig:trajectories} examples of the distribution of strategies as they evolve following the discrete-time dynamics of each of the investigate approaches. These results are consistent with the one presented in \cite{game-clustering}. We can see in the right column that Pure InImDyn reaches an equilibrium faster than the other dynamics.
 
+\section{Going deeper: \textit{DINO} feature for semantic segmentation}
+\label{sec:dino}
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/dino/tile_1/21077.jpg}
+        \includegraphics[width=\textwidth]{figures/dino/tile_1/291000.jpg}
+        \includegraphics[width=\textwidth]{figures/dino/tile_1/376043.jpg}
+        \caption{Original}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/dino/tile_1/21077_seg.png}
+        \includegraphics[width=\textwidth]{figures/dino/tile_1/291000_seg.png}
+        \includegraphics[width=\textwidth]{figures/dino/tile_1/376043_seg.png}
+        \caption{Clusters}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/dino/tile_1/21077_avg.png}
+        \includegraphics[width=\textwidth]{figures/dino/tile_1/291000_avg.png}
+        \includegraphics[width=\textwidth]{figures/dino/tile_1/376043_avg.png}
+        \caption{Average colors}
+    \end{subfigure}
+       \caption{Segmentations obtained with DINO features on $28\times 28$ feature maps.}
+       \label{fig:results-dino}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/dino/tile_2/62096.jpg}
+        \includegraphics[width=\textwidth]{figures/dino/tile_2/219090.jpg}
+        \includegraphics[width=\textwidth]{figures/dino/tile_2/253027.jpg}
+        \caption{Original}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/dino/tile_2/62096_seg.png}
+        \includegraphics[width=\textwidth]{figures/dino/tile_2/219090_seg.png}
+        \includegraphics[width=\textwidth]{figures/dino/tile_2/253027_seg.png}
+        \caption{Clusters}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/dino/tile_2/62096_avg.png}
+        \includegraphics[width=\textwidth]{figures/dino/tile_2/219090_avg.png}
+        \includegraphics[width=\textwidth]{figures/dino/tile_2/253027_avg.png}
+        \caption{Average colors}
+    \end{subfigure}
+       \caption{Segmentations obtained with DINO features on $4$ tiles of $28\times 28$.}
+       \label{fig:results-dino-tile2}
+\end{figure}
+
+Motivated by the advent of deep learning and the more interesting task of \textit{semantic segmentation}, we propose an attempt to extend the method to tackle the latter problem using \textit{DINO} features. These high-dimensional features were introduced by Caron et al.~ in \cite{dino}. They result from a self-supervised training procedure with Vision Transformers\cite{transformers}. Most importantly to us, they were shown to embed semantic information. We thus investigate whether we can repurpose our segmentation algorithm from RGB space to this high-dimensional space.
+
+First of all, we extract DINO features using the \href{https://huggingface.co/facebook/dino-vitb8}{facebook/dino-vitb8} model available on \url{https://huggingface.co/}{huggingface}. This model assumes images of size $224\times 224$ and produces features of dimension $768$ by considering patches of 8 pixels. This results in $28\times 28$ images, which is significantly low resolution but still provides us with a coarse semantic segmentation in the end. Additionally, we propose alternative results where we tile the image into 4 blocks of $224\times 224$ thus doubling the size of the result. Yet due to the receptive field of the network, this results in artifacts at the junction of the tiles. As $768$ is a very high dimension, we run a PCA on the features to reduce their dimensionality to 64 only.
+
+In order to run our segmentation algorithm, we modify the similarity matrix to account for the high dimensionality of the DINO features. Instead of a L2 loss, we consider cosine similarities, thus redefining $A$ with $A_{i, j}=\exp\left(-\frac{(1-\text{sim}(\phi_i, \phi_j))}{T}\right)$ where $\text{sim}$ stands for the cosine similarity between the features $\phi_i$ (resp. $\phi_j$) from pixel $i$ (resp. $j$) and $T$ is a temperature parameter. In our experiments, we chose $T=25$.
+
+Fig.~\ref{fig:results-dino} (resp. Fig.~\ref{fig:results-dino-tile2} ) shows the results of segmentation with 1 (resp. 4 tiles).Despite the rather low image size of the DINO feature maps, we can clearly segment semantically the input images. I find it particularly interesting that we managed to adapt a decade-old algorithm to state-of-the-art methods in a conclusive manner.
 
 \section{Conclusion and discussion}
 

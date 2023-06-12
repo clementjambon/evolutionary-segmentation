@@ -4,3 +4,4 @@ matplotlib
 tqdm
 opencv-python
 notebook
+scikit-learn

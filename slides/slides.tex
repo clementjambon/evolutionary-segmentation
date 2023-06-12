@@ -77,7 +77,7 @@
         \item We propose to build on the PhD dissertation of Samuel Rota Bulò\cite{bulo-thesis} and the publication of Shen et al.~\cite{game-clustering} and reproduce their results.
         \item To do so, we formulate Image Segmentation as a clustering game, which we simulate through discrete-time evolutionary dynamics.
         \item More precisely, we investigate and evaluate three approaches: \textit{Best response dynamics}, \textit{Replicator dynamics} and \textit{Infection and immunization dynamics}\cite{inimdyn}.
-        \item Additionally, we extend their results to semantic segmentation by making use of state-of-the-art self-supervised features, namely DINO\cite{dino}.
+        \item Additionally, we extend their results to semantic segmentation by making use of state-of-the-art self-supervised features, namely DINO\cite{dino} features.
     \end{itemize}
 
 \end{frame}
@@ -145,6 +145,38 @@
         \label{fig:trajectories}
     \end{figure}
     The figure above shows that with the same number of iterations, the \textit{Infection and immunization dynamics} reaches a stable state faster than the two other strategies.
+\end{frame}
+
+\begin{frame}
+    \frametitle{Semantic segmentation with deep self-supervised DINO features}
+    \begin{figure}
+        \centering
+        \begin{subfigure}[b]{0.16\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{../figures/dino/tile_2/62096.jpg}
+            \includegraphics[width=\textwidth]{../figures/dino/tile_2/219090.jpg}
+            \includegraphics[width=\textwidth]{../figures/dino/tile_2/253027.jpg}
+            \caption{Original}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.16\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{../figures/dino/tile_2/62096_seg.png}
+            \includegraphics[width=\textwidth]{../figures/dino/tile_2/219090_seg.png}
+            \includegraphics[width=\textwidth]{../figures/dino/tile_2/253027_seg.png}
+            \caption{Clusters}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.16\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{../figures/dino/tile_2/62096_avg.png}
+            \includegraphics[width=\textwidth]{../figures/dino/tile_2/219090_avg.png}
+            \includegraphics[width=\textwidth]{../figures/dino/tile_2/253027_avg.png}
+            \caption{Average colors}
+        \end{subfigure}
+           \caption{Segmentations obtained with DINO features on $4$ tiles of $28\times 28$.}
+           \label{fig:results-dino-tile2}
+    \end{figure}
 \end{frame}
 
 \begin{frame}
