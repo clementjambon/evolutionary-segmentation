@@ -3,11 +3,11 @@
 
 This is the implementation of a small project I did for the block course ["Controversies in Game Theory IX: Cooperative and Non-​Cooperative Game Theory"](https://coss.ethz.ch/education/controversies.html).
 
-## Experimenting with the main notebook
+## Running the notebooks
 
 Before getting started, please make sure you have the necessary dependencies with
 ```bash
-pip install -r requirements_dino.txt`
+pip install -r requirements.txt`
 ```
 
 Then download the BSDS300 datasets (if not already done). To do so, we provide a script which you can execute with
@@ -32,3 +32,5 @@ Then, run (this might take some time)
 cd scripts
 python extract-dino.py
 ```
+
+Note that by default, features are extracted in `N_TILESxN_TILES` tiles with `N_TILES=2`. The value can be changed within `scripts/extract_dino.py`.

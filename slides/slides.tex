@@ -73,20 +73,20 @@
     \frametitle{Overview}
 
     \begin{itemize}
-        \item Image Segmentation has been extensively studied in the Image Processing community for decades.
+        \item Image segmentation has been extensively studied in the image processing community for decades.
         \item We propose to build on the PhD dissertation of Samuel Rota Bulò\cite{bulo-thesis} and the publication of Shen et al.~\cite{game-clustering} and reproduce their results.
-        \item To do so, we formulate Image Segmentation as a clustering game, which we simulate through discrete-time evolutionary dynamics.
-        \item More precisely, we investigate and evaluate three approaches: \textit{Best response dynamics}, \textit{Replicator dynamics} and \textit{Infection and immunization dynamics}\cite{inimdyn}.
-        \item Additionally, we extend their results to semantic segmentation by making use of state-of-the-art self-supervised features, namely DINO\cite{dino} features.
+        \item To do so, we formulate image segmentation as a clustering game, which we simulate through discrete-time evolutionary dynamics.
+        \item More precisely, we investigate and evaluate three approaches: \textit{Best response dynamics}, \textit{Replicator dynamics} and \textit{Infection and immunization dynamics} \cite{inimdyn}.
+        \item Additionally, we extend their results to semantic segmentation by making use of state-of-the-art self-supervised features, namely DINO \cite{dino} features.
     \end{itemize}
 
 \end{frame}
 
 \begin{frame}
     \frametitle{Image Segmentation as a clustering game}
-    Image Segmentation can be defined as a clustering game where:
+    Image segmentation can be defined as a clustering game where:
     \begin{itemize}
-        \item Pixels $\{1, \ldots, n\}$ are represented as a mixed strategy $(x_1, \ldots, x_n)$ in the simplex $\Delta$ i.e.~ $\sum_{i=1}^nx_i=1$.
+        \item Pixels $\{1, \ldots, n\}$ are represented as a mixed strategy $(x_1, \ldots, x_n)$ in the simplex $\Delta$ i.e.\ $\sum_{i=1}^nx_i=1$.
         \item The payoff of a pixel $i$ against another pixel $j$ is given by a similarity matrix $A\in\mathbb{R}^{n\times n}$ that quantify how close two pixels are from one another.
         \item In practice, we choose a Gaussian kernel $A_{i, j}=\exp\left(-\frac{\lVert C(i) - C(j)\rVert^2}{\sigma^2}\right)$ where $C(i)$ is a 3-dimensional vector representing the value of pixel $i$.
         \item The goal of the clustering game is to find a Nash equilibrium w.r.t. this setting.
@@ -97,18 +97,18 @@
     \frametitle{Evolutionary dynamics}
     In order to solve such a high dimensional problem, we use evolutionary dynamics and three different discrete-time dynamics:
     \begin{enumerate}
-        \item \textit{Best response dynamics} which inject in the population, at each time step, one individual that would yield the best response w.r.t. the payoff matrix.
+        \item \textit{Best response dynamics} which injects in the population, at each time step, the individual that would yield the best response w.r.t. the payoff matrix.
         \item \textit{Replicator dynamics} that can be seen as a form of \textit{Darwin selection} whereby the "fittest" populations are more inclined to survive.
         \item \textit{Infection and immunization dynamics} where "infectious" individuals are iteratively introduced in a population to yield immunity.
     \end{enumerate}
-    We refer the reader to our report for more rigorous definition and our Python notebook for a practical implementation of these approaches.
+    We refer the reader to our report for more rigorous definitions and our Python notebook for a practical implementation of these approaches.
 \end{frame}
 
 \begin{frame}
     \frametitle{Results}
     \begin{figure}
         \centering
-        \begin{subfigure}[b]{0.25\textwidth}
+        \begin{subfigure}[b]{0.23\textwidth}
             \centering
             \includegraphics[width=\textwidth]{../figures/methods/fp/14037_avg.png}
             \includegraphics[width=\textwidth]{../figures/methods/fp/260058_avg.png}
@@ -116,7 +116,7 @@
             \caption{Best Response dynamics}
         \end{subfigure}
         \hfill
-        \begin{subfigure}[b]{0.25\textwidth}
+        \begin{subfigure}[b]{0.23\textwidth}
             \centering
             \includegraphics[width=\textwidth]{../figures/methods/rd/14037_avg.png}
             \includegraphics[width=\textwidth]{../figures/methods/rd/260058_avg.png}
@@ -124,14 +124,14 @@
             \caption{Replicator dynamics}
         \end{subfigure}
         \hfill
-        \begin{subfigure}[b]{0.25\textwidth}
+        \begin{subfigure}[b]{0.23\textwidth}
             \centering
             \includegraphics[width=\textwidth]{../figures/methods/inimdyn/14037_avg.png}
             \includegraphics[width=\textwidth]{../figures/methods/inimdyn/260058_avg.png}
             \includegraphics[width=\textwidth]{../figures/methods/inimdyn/361010_avg.png}
             \caption{Pure InImDyn}
         \end{subfigure}
-           \caption{Segmentations obtained with our implementations of the three dynamics presented in section \ref{sec:evo-dyn} at sampling rate $p=0.01$.}
+           \caption{Segmentations obtained with our implementations of the three dynamics. Per-vertex average colors are shown here.}
            \label{fig:results-dynamics}
     \end{figure}
 \end{frame}
@@ -174,14 +174,13 @@
             \includegraphics[width=\textwidth]{../figures/dino/tile_2/253027_avg.png}
             \caption{Average colors}
         \end{subfigure}
-           \caption{Segmentations obtained with DINO features on $4$ tiles of $28\times 28$.}
            \label{fig:results-dino-tile2}
     \end{figure}
 \end{frame}
 
 \begin{frame}
     \frametitle{Implementation}
-    We provide all the sources to reproduce our results on the BSDS300\cite{bsds300} dataset as a Jupyter Notebook. Feel free to consult it at:
+    We provide all the sources to reproduce our results on the BSDS300 \cite{bsds300} dataset as a Jupyter Notebook. Feel free to consult it at:
     \begin{center}
         \url{https://github.com/clementjambon/evolutionary-segmentation}
     \end{center}
